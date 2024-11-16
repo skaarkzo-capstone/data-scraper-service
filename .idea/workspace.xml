@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7a1f72b7-25f5-49eb-854a-11db90d062fa" name="Changes" comment="Test scraping tools" />
+    <list default="true" id="7a1f72b7-25f5-49eb-854a-11db90d062fa" name="Changes" comment="Remove unneeded files">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -47,6 +49,7 @@
   "keyToString": {
     "Python.test_tools.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "sufyan/sustain-12",
     "last_opened_file_path": "C:/Users/great/Documents/University/Year 4/SE4450/Repos/data-scraper-service"
   }
 }]]></component>
@@ -113,7 +116,23 @@
       <option name="project" value="LOCAL" />
       <updated>1731776908818</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Remove unneeded file">
+      <option name="closed" value="true" />
+      <created>1731777154232</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1731777154232</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Remove unneeded files">
+      <option name="closed" value="true" />
+      <created>1731777303463</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1731777303463</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -122,6 +141,8 @@
     <MESSAGE value="Install scraping packages" />
     <MESSAGE value="Update dependencies" />
     <MESSAGE value="Test scraping tools" />
-    <option name="LAST_COMMIT_MESSAGE" value="Test scraping tools" />
+    <MESSAGE value="Remove unneeded file" />
+    <MESSAGE value="Remove unneeded files" />
+    <option name="LAST_COMMIT_MESSAGE" value="Remove unneeded files" />
   </component>
 </project>
