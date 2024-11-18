@@ -32,9 +32,9 @@ async def fetch_company_data(company_name: str) -> CompanyDTO:
             annual_revenue=75000000.0,
             market_cap=120000000.0,
             key_products=[
-                Product(name="Canned Soups", description="Wide range of canned soups for everyday meals"),
-                Product(name="Frozen Vegetables", description="Packaged frozen vegetables for retail and wholesale"),
-                Product(name="Ready-to-Eat Meals", description="Microwaveable meals for busy households")
+                ProductDTO(name="Canned Soups", description="Wide range of canned soups for everyday meals"),
+                ProductDTO(name="Frozen Vegetables", description="Packaged frozen vegetables for retail and wholesale"),
+                ProductDTO(name="Ready-to-Eat Meals", description="Microwaveable meals for busy households")
             ],
             sustainability_goals="Reduce packaging waste by 30% by 2028.",
             social_goals="Partner with food banks to donate surplus production.",
