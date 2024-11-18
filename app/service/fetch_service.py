@@ -50,9 +50,9 @@ async def fetch_company_data(company_name: str) -> CompanyDTO:
             annual_revenue=10000000.0,
             market_cap=0.0,
             key_products=[
-                Product(name="Casual Wear", description="Trendy and affordable casual wear for men and women"),
-                Product(name="Outerwear", description="Seasonal jackets and coats"),
-                Product(name="Accessories", description="Fashionable accessories including scarves and hats")
+                ProductDTO(name="Casual Wear", description="Trendy and affordable casual wear for men and women"),
+                ProductDTO(name="Outerwear", description="Seasonal jackets and coats"),
+                ProductDTO(name="Accessories", description="Fashionable accessories including scarves and hats")
             ],
             sustainability_goals="Introduce a clothing recycling program by 2025.",
             social_goals="Support local charities with annual fundraising events.",
