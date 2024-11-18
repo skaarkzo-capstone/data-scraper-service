@@ -15,8 +15,8 @@ async def fetch_company_data(company_name: str) -> CompanyDTO:
             annual_revenue=25000000.0,
             market_cap=0.0,
             key_products=[
-                Product(name="Residential Housing", description="Affordable residential housing projects"),
-                Product(name="Office Buildings", description="Mid-size office buildings in urban centers")
+                ProductDTO(name="Residential Housing", description="Affordable residential housing projects"),
+                ProductDTO(name="Office Buildings", description="Mid-size office buildings in urban centers")
             ],
             sustainability_goals="Implement energy-efficient building designs by 2026.",
             social_goals="Offer internships for local students in the trades.",
