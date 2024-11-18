@@ -86,9 +86,9 @@ async def fetch_company_data(company_name: str) -> CompanyDTO:
             annual_revenue=35000000.0,
             market_cap=0.0,
             key_products=[
-                Product(name="Luxury Hotels", description="Boutique hotels with premium amenities"),
-                Product(name="Conference Services", description="Facilities and services for corporate events"),
-                Product(name="Fine Dining Restaurants", description="Award-winning restaurants in major cities")
+                ProductDTO(name="Luxury Hotels", description="Boutique hotels with premium amenities"),
+                ProductDTO(name="Conference Services", description="Facilities and services for corporate events"),
+                ProductDTO(name="Fine Dining Restaurants", description="Award-winning restaurants in major cities")
             ],
             sustainability_goals="Adopt water-saving technologies in all properties by 2027.",
             social_goals="Offer scholarships to hospitality students from disadvantaged backgrounds.",
