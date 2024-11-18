@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List
 
-class Product(BaseModel):
+class ProductDTO(BaseModel):
     name: str
     description: str
 
