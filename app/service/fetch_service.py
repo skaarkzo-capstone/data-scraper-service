@@ -68,9 +68,9 @@ async def fetch_company_data(company_name: str) -> CompanyDTO:
             annual_revenue=150000000.0,
             market_cap=250000000.0,
             key_products=[
-                Product(name="Freight Services", description="Nationwide freight transportation services"),
-                Product(name="Warehousing Solutions", description="Temperature-controlled and standard warehousing options"),
-                Product(name="Supply Chain Consulting", description="Optimized supply chain solutions for businesses")
+                ProductDTO(name="Freight Services", description="Nationwide freight transportation services"),
+                ProductDTO(name="Warehousing Solutions", description="Temperature-controlled and standard warehousing options"),
+                ProductDTO(name="Supply Chain Consulting", description="Optimized supply chain solutions for businesses")
             ],
             sustainability_goals="Transition 20% of the fleet to electric vehicles by 2030.",
             social_goals="Support employment opportunities in underserved regions.",
