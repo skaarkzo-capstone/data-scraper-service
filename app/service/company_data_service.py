@@ -1,4 +1,4 @@
-from app.dto.company_dto import CompanyDTO, ProductDTO
+from app.dto.company_scraped_data_dto import CompanyDTO, ProductDTO
 
 async def fetch_company_data(company_name: str) -> CompanyDTO:
     """

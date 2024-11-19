@@ -14,7 +14,7 @@ class CompanyDTO(BaseModel):
     size: str  # Number of employees or annual revenue
     annual_revenue: float
     market_cap: float
-    key_products: List[Product]
+    key_products: List[ProductDTO]
     sustainability_goals: str
     social_goals: str
     governance: str

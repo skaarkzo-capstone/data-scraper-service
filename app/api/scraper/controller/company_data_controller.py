@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.dto.company_dto import CompanyDTO
+from app.dto.company_scraped_data_dto import CompanyDTO
 from app.service.company_data_service import fetch_company_data
 
 router = APIRouter()
