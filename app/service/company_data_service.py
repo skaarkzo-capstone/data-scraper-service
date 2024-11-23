@@ -29,9 +29,16 @@ class CompanyWebsiteScraper:
 
     # Fetches a web page and returns a BeautifulSoup object.
     def get_soup(self, url):
-        response = requests.get(url, headers=self.headers, timeout=10)
-        response.raise_for_status()
-        return BeautifulSoup(response.text, "html.parser")
+        try:
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            return BeautifulSoup(response.text, "html.parser")
+        except requests.exceptions.HTTPError as http_err:
+            print(f"HTTP error occurred while fetching {url}: {http_err}")
+        except requests.exceptions.RequestException as req_err:
+            print(f"Request error occurred while fetching {url}: {req_err}")
+        except Exception as e:
+            print(f"An error occurred while fetching {url}: {e}")
 
     # Extracts internal links from the given BeautifulSoup object.
     def get_internal_links(self, soup):
@@ -56,21 +63,30 @@ class CompanyWebsiteScraper:
 
     # Extracts main content and internal links from the given URL.
     def extract_main_content(self, url):
-        soup = self.get_soup(url)
-        content = [p.get_text(strip=True) for p in soup.find_all("p")]
-        links = self.get_internal_links(soup)
-        return "\n".join(content), links
+        try:
+            soup = self.get_soup(url)
+            if soup is None:
+                print(f"Skipping {url} due to an error.")
+                return None  # Skip processing if the page couldn't be fetched
+            content = [p.get_text(strip=True) for p in soup.find_all("p")]
+            links = self.get_internal_links(soup)
+            return "\n".join(content), links
+        except Exception as e:
+            print(f"Error processing {url}: {e}")
 
     # Recursively crawl website up to maximum depth
     def crawl(self, url, depth=0, max_depth=2):
-        if depth > max_depth or url in self.visited_urls:
-            return
-        print(f"Crawling: {url} at depth {depth}")
-        self.visited_urls.add(url)
-        content, links = self.extract_main_content(url)
-        # Process content as needed
-        for link in links:
-            self.crawl(link, depth + 1, max_depth)
+        try:
+            if depth > max_depth or url in self.visited_urls:
+                return
+            print(f"Crawling: {url} at depth {depth}")
+            self.visited_urls.add(url)
+            content, links = self.extract_main_content(url)
+            # Process content as needed
+            for link in links:
+                self.crawl(link, depth + 1, max_depth)
+        except Exception as e:
+            print(f"Error processing {url}: {e}")
 
 
 if __name__ == "__main__":
