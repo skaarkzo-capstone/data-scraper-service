@@ -7,6 +7,7 @@ class CompanyWebsiteScraper:
     def __init__(self, base_url):
         self.base_url = base_url.rstrip('/')
         self.headers = {"User-Agent": "Mozilla/5.0"}
+        self.visited_urls = set()
 
     # Fetches a web page and returns a BeautifulSoup object.
     def get_soup(self, url):
@@ -38,8 +39,20 @@ class CompanyWebsiteScraper:
         links = self.get_internal_links(soup)
         return "\n".join(content), links
 
+    # Recursively crawl website up to maximum depth
+    def crawl(self, url, depth=0, max_depth=2):
+        if depth > max_depth or url in self.visited_urls:
+            return
+        print(f"Crawling: {url} at depth {depth}")
+        self.visited_urls.add(url)
+        content, links = self.extract_main_content(url)
+        # Process content as needed
+        for link in links:
+            self.crawl(link, depth + 1, max_depth)
+
+
 if __name__ == "__main__":
-    company_name = "chaotic closet"  # Replace with the target company name
+    company_name = "urban calm coffee company"  # Replace with the target company name
     csv_file_path = "filtered_companies_canada.csv"  # Path to your CSV file
 
     # Get the company's website
@@ -49,7 +62,4 @@ if __name__ == "__main__":
 
     scraper = CompanyWebsiteScraper(company_url)
     content, links = scraper.extract_main_content(company_url)
-    print(content)
-    print("Found links:")
-    for link in links:
-        print(link)
+    scraper.crawl(company_url)
