@@ -14,6 +14,12 @@ class CompanyWebsiteScraper:
         response.raise_for_status()
         return BeautifulSoup(response.text, "html.parser")
 
+    # Extracts main content from a given url
+    def extract_main_content(self, url):
+        soup = self.get_soup(url)
+        content = [p.get_text(strip=True) for p in soup.find_all("p")]
+        return "\n".join(content)
+
 if __name__ == "__main__":
     company_name = "chaotic closet"  # Replace with the target company name
     csv_file_path = "filtered_companies_canada.csv"  # Path to your CSV file
@@ -25,4 +31,6 @@ if __name__ == "__main__":
 
     scraper = CompanyWebsiteScraper(company_url)
     soup = scraper.get_soup(company_url)
+    content = scraper.extract_main_content(company_url)
     print(soup.title.string)
+    print(content)
