@@ -38,9 +38,12 @@ class CompanyWebsiteScraper:
         links = set()
         for link in soup.find_all("a", href=True):
             text = link.get_text(strip=True).lower()
+            href = link["href"]
+            full_url = self.get_full_url(href)
+            combined_text = text + " " + full_url
+            if any(keyword in combined_text for keyword in self.exclusion_keywords):
+                continue
             if any(keyword in text for keyword in self.keywords):
-                href = link["href"]
-                full_url = self.get_full_url(href)
                 links.add(full_url)
         return links
 
