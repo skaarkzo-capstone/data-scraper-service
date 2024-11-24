@@ -159,7 +159,6 @@ if __name__ == "__main__":
     if company_url:
         print(f"Found website: {company_url}")
 
-    company_url = "https://shopify.com"
     scraper = CompanyWebsiteScraper(company_url)
     scraper.crawl(company_url)
 
