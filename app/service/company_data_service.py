@@ -4,12 +4,14 @@ import requests
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
 import os
+import json
 
 class CompanyWebsiteScraper:
     def __init__(self, base_url):
         self.base_url = base_url.rstrip('/')
         self.headers = {"User-Agent": "Mozilla/5.0"}
         self.visited_urls = set()
+        self.data = {}  # Initialize data dictionary
 
         # Define keywords for different sections, including 'products'
         self.keywords = [
@@ -107,16 +109,45 @@ class CompanyWebsiteScraper:
             self.visited_urls.add(url)
             content, links, soup = self.extract_main_content(url)
             if content is None or soup is None:
-                return
+                return  # Skip processing if content or soup is None
+
+            # Collect data for the current page
+            page_data = {
+                "url": url,
+                "content": content,
+                "pdfs": [],
+                "links": []
+            }
+
+            # Find and process PDFs
             pdf_urls = self.find_pdfs_on_page(soup)
             for pdf_url in pdf_urls:
                 pdf_text = self.extract_text_from_pdf(pdf_url)
-                print(pdf_text)
-            print(content)
+                # Add PDF data to page_data
+                page_data["pdfs"].append({
+                    "url": pdf_url,
+                    "content": pdf_text
+                })
+
+            # Store the page data
+            self.data[url] = page_data
+
+            # Continue crawling linked pages
             for link in links:
                 self.crawl(link, depth + 1, max_depth)
         except Exception as e:
             print(f"Error processing {url}: {e}")
+
+    def save_to_json(self, output_file):
+        """
+        Saves the scraped data to a JSON file.
+        """
+        try:
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(self.data, f, indent=4, ensure_ascii=False)
+            print(f"Data successfully saved to {output_file}")
+        except Exception as e:
+            print(f"Error saving data to JSON: {e}")
 
 
 if __name__ == "__main__":
@@ -128,6 +159,10 @@ if __name__ == "__main__":
     if company_url:
         print(f"Found website: {company_url}")
 
+    company_url = "https://shopify.com"
     scraper = CompanyWebsiteScraper(company_url)
-    content, links = scraper.extract_main_content(company_url)
     scraper.crawl(company_url)
+
+    # Save the scraped data to a JSON file
+    output_file = f"{company_name.replace(' ', '_')}_scraped_data.json"
+    scraper.save_to_json(output_file)
