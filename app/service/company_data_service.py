@@ -2,6 +2,8 @@ from app.dto.company_scraped_data_dto import CompanyDTO, ProductDTO
 from website_identifier_service import get_company_website
 import requests
 from bs4 import BeautifulSoup
+from PyPDF2 import PdfReader
+import os
 
 class CompanyWebsiteScraper:
     def __init__(self, base_url):
@@ -67,12 +69,34 @@ class CompanyWebsiteScraper:
             soup = self.get_soup(url)
             if soup is None:
                 print(f"Skipping {url} due to an error.")
-                return None  # Skip processing if the page couldn't be fetched
+                return None, None, None
             content = [p.get_text(strip=True) for p in soup.find_all("p")]
             links = self.get_internal_links(soup)
-            return "\n".join(content), links
+            return "\n".join(content), links, soup
         except Exception as e:
             print(f"Error processing {url}: {e}")
+            return None, None, None
+
+    # Finds and returns URLs of PDFs on the page.
+    def find_pdfs_on_page(self, soup):
+        pdf_urls = set()
+        for link in soup.find_all("a", href=True):
+            href = link["href"]
+            if href.lower().endswith('.pdf'):
+                full_url = self.get_full_url(href)
+                pdf_urls.add(full_url)
+        return pdf_urls
+
+    # Downloads a PDF and extracts text.
+    def extract_text_from_pdf(self, pdf_url):
+        response = requests.get(pdf_url, headers=self.headers, timeout=30)
+        response.raise_for_status()
+        with open("temp.pdf", "wb") as f:
+            f.write(response.content)
+        reader = PdfReader("temp.pdf")
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+        os.remove("temp.pdf")
+        return text
 
     # Recursively crawl website up to maximum depth
     def crawl(self, url, depth=0, max_depth=2):
@@ -81,8 +105,14 @@ class CompanyWebsiteScraper:
                 return
             print(f"Crawling: {url} at depth {depth}")
             self.visited_urls.add(url)
-            content, links = self.extract_main_content(url)
-            # Process content as needed
+            content, links, soup = self.extract_main_content(url)
+            if content is None or soup is None:
+                return
+            pdf_urls = self.find_pdfs_on_page(soup)
+            for pdf_url in pdf_urls:
+                pdf_text = self.extract_text_from_pdf(pdf_url)
+                print(pdf_text)
+            print(content)
             for link in links:
                 self.crawl(link, depth + 1, max_depth)
         except Exception as e:
