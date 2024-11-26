@@ -1,5 +1,6 @@
 from app.dto.company_scraped_data_dto import CompanyDTO, ProductDTO
 from website_identifier_service import get_company_website
+from utilities.pdf_processor import PDFProcessor
 import requests
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
@@ -15,6 +16,7 @@ class CompanyWebsiteScraper:
         self.extract_pdfs = extract_pdfs
         self.pdf_directory = pdf_directory
         self.clear_pdf_directory()
+        self.pdf_processor = PDFProcessor(pdf_directory=self.pdf_directory, headers=self.headers)
         self.data = {}  # Initialize data dictionary
 
         # Create directory for PDFs if it doesn't exist
@@ -198,37 +200,7 @@ class CompanyWebsiteScraper:
         return pdf_urls
 
     def process_pdf(self, pdf_url):
-        print(f"Processing PDF: {pdf_url}")
-        try:
-            response = requests.get(pdf_url, headers=self.headers, timeout=30)
-            response.raise_for_status()
-            if self.extract_pdfs:
-                # Generate a safe file name
-                file_name = os.path.basename(pdf_url)
-                if not file_name.lower().endswith('.pdf'):
-                    file_name += '.pdf'
-                safe_file_name = self.make_safe_filename(file_name)
-                pdf_path = os.path.join(self.pdf_directory, safe_file_name)
-
-                # Save the PDF to disk
-                with open(pdf_path, "wb") as f:
-                    f.write(response.content)
-
-                # Extract text from the PDF
-                text = ""
-                try:
-                    with open(pdf_path, 'rb') as f:
-                        reader = PdfReader(f)
-                        text = "\n".join(page.extract_text() or "" for page in reader.pages)
-                except Exception as e:
-                    print(f"Error extracting text from {pdf_path}: {e}")
-
-                return {"url": pdf_url, "file_path": pdf_path, "content": text}
-            else:
-                return {"url": pdf_url}
-        except Exception as e:
-            print(f"Error downloading PDF from {pdf_url}: {e}")
-            return None
+        return self.pdf_processor.process_pdf(pdf_url, extract_pdfs=self.extract_pdfs)
 
     def clear_pdf_directory(self):
         if os.path.exists(self.pdf_directory):
@@ -248,7 +220,7 @@ class CompanyWebsiteScraper:
 
 
 if __name__ == "__main__":
-    company_name = "shopify"  # Replace with the target company name
+    company_name = "cooperators"  # Replace with the target company name
     csv_file_path = "filtered_companies_canada.csv"  # Path to your CSV file
 
     # Get the company's website
