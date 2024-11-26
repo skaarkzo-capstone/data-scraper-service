@@ -10,11 +10,11 @@ class CompanyWebsiteScraper:
     def __init__(self, base_url, extract_pdfs=True, pdf_directory='downloaded_pdfs'):
         self.base_url = base_url.rstrip('/')
         self.headers = {"User-Agent": "Mozilla/5.0"}
-        self.explored_urls = set()
-        self.checked_urls = set()  # Keep track of URLs checked for PDFs
+        self.explored_urls = set() # Keep track of urls that have been visited/explored
+        self.pdf_checked_urls = set()  # Keep track of URLs checked for PDFs on a certain page
         self.extract_pdfs = extract_pdfs
         self.pdf_directory = pdf_directory
-        self.clear_pdf_directory()
+        self.clear_pdf_directory() # Delete old PDFs at the start of a run
         self.pdf_processor = PDFProcessor(pdf_directory=self.pdf_directory, headers=self.headers)
         self.data = {}  # Initialize data dictionary
 
@@ -173,9 +173,9 @@ class CompanyWebsiteScraper:
             href = link["href"]
             text = link.get_text(strip=True).lower()
             full_url = self.get_full_url(href)
-            if full_url in self.checked_urls:
+            if full_url in self.pdf_checked_urls:
                 continue
-            self.checked_urls.add(full_url)
+            self.pdf_checked_urls.add(full_url)
             if self.is_excluded_link(text, full_url):
                 continue
 
