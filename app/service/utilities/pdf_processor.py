@@ -1,6 +1,8 @@
 import os
 import requests
 from PyPDF2 import PdfReader
+import hashlib
+import time
 
 class PDFProcessor:
     def __init__(self, pdf_directory='downloaded_pdfs', headers=None):
@@ -17,12 +19,17 @@ class PDFProcessor:
             response.raise_for_status()
 
             if extract_pdfs:
-                # Generate a safe file name
+                # Generate a unique file name
                 file_name = os.path.basename(pdf_url)
                 if not file_name.lower().endswith('.pdf'):
                     file_name += '.pdf'
+
+                # Create a unique identifier using timestamp and URL hash
+                unique_id = hashlib.md5(f"{time.time()}_{pdf_url}".encode()).hexdigest()[:10]
                 safe_file_name = self.make_safe_filename(file_name)
-                pdf_path = os.path.join(self.pdf_directory, safe_file_name)
+                unique_file_name = f"{unique_id}_{safe_file_name}"
+
+                pdf_path = os.path.join(self.pdf_directory, unique_file_name)
 
                 # Save the PDF to disk
                 with open(pdf_path, "wb") as f:
