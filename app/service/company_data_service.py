@@ -3,7 +3,7 @@ from website_identifier_service import get_company_website
 import requests
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
-import os
+import os, shutil
 import json
 
 class CompanyWebsiteScraper:
@@ -14,6 +14,7 @@ class CompanyWebsiteScraper:
         self.checked_urls = set()  # Keep track of URLs checked for PDFs
         self.extract_pdfs = extract_pdfs
         self.pdf_directory = pdf_directory
+        self.clear_pdf_directory()
         self.data = {}  # Initialize data dictionary
 
         # Create directory for PDFs if it doesn't exist
@@ -228,6 +229,11 @@ class CompanyWebsiteScraper:
         except Exception as e:
             print(f"Error downloading PDF from {pdf_url}: {e}")
             return None
+
+    def clear_pdf_directory(self):
+        if os.path.exists(self.pdf_directory):
+            shutil.rmtree(self.pdf_directory)
+        os.makedirs(self.pdf_directory)
 
     def make_safe_filename(self, filename):
         return "".join(c if c.isalnum() or c in (' ', '.', '_') else '_' for c in filename)
