@@ -3,7 +3,6 @@ from website_identifier_service import get_company_website
 from utilities.pdf_processor import PDFProcessor
 import requests
 from bs4 import BeautifulSoup
-from PyPDF2 import PdfReader
 import os, shutil
 import json
 
