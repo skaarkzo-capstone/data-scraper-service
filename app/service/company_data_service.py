@@ -200,23 +200,15 @@ class CompanyWebsiteScraper:
 
     def process_pdf(self, pdf_url):
         return self.pdf_processor.process_pdf(pdf_url, extract_pdfs=self.extract_pdfs)
-
+    
     def clear_pdf_directory(self):
-        if os.path.exists(self.pdf_directory):
-            shutil.rmtree(self.pdf_directory)
-        os.makedirs(self.pdf_directory)
-
+        return self.pdf_processor.clear_pdf_directory(self)
+    
     def make_safe_filename(self, filename):
-        return "".join(c if c.isalnum() or c in (' ', '.', '_') else '_' for c in filename)
-
+        return self.pdf_processor.make_safe_filename(filename)
+    
     def save_to_json(self, output_file):
-        try:
-            with open(output_file, "w", encoding="utf-8") as f:
-                json.dump(self.data, f, indent=4, ensure_ascii=False)
-            print(f"Data successfully saved to {output_file}")
-        except Exception as e:
-            print(f"Error saving data to JSON: {e}")
-
+        self.pdf_processor.save_to_json(self.data, output_file)
 
 if __name__ == "__main__":
     company_name = "cooperators"  # Replace with the target company name

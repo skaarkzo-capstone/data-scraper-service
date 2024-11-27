@@ -3,6 +3,8 @@ import requests
 from PyPDF2 import PdfReader
 import hashlib
 import time
+import shutil
+import json
 
 class PDFProcessor:
     def __init__(self, pdf_directory='downloaded_pdfs', headers=None):
@@ -54,3 +56,16 @@ class PDFProcessor:
     @staticmethod
     def make_safe_filename(filename):
         return "".join(c if c.isalnum() or c in (' ', '.', '_') else '_' for c in filename)
+
+    def clear_pdf_directory(self):
+        if os.path.exists(self.pdf_directory):
+            shutil.rmtree(self.pdf_directory)
+        os.makedirs(self.pdf_directory)
+
+    def save_to_json(self, data, output_file):
+        try:
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
+            print(f"Data successfully saved to {output_file}")
+        except Exception as e:
+            print(f"Error saving data to JSON: {e}")
