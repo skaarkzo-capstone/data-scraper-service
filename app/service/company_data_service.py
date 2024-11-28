@@ -1,10 +1,9 @@
-from app.dto.company_scraped_data_dto import CompanyDTO, ProductDTO
 from website_identifier_service import get_company_website
 from utilities.pdf_processor import PDFProcessor
 import requests
 from bs4 import BeautifulSoup
-import os, shutil
-import json
+import os
+import sys
 
 class CompanyWebsiteScraper:
     def __init__(self, base_url, extract_pdfs=True, pdf_directory='downloaded_pdfs'):
@@ -14,7 +13,6 @@ class CompanyWebsiteScraper:
         self.pdf_checked_urls = set()  # Keep track of URLs checked for PDFs on a certain page
         self.extract_pdfs = extract_pdfs
         self.pdf_directory = pdf_directory
-        self.clear_pdf_directory() # Delete old PDFs at the start of a run
         self.pdf_processor = PDFProcessor(pdf_directory=self.pdf_directory, headers=self.headers)
         self.data = {}  # Initialize data dictionary
 
@@ -200,10 +198,7 @@ class CompanyWebsiteScraper:
 
     def process_pdf(self, pdf_url):
         return self.pdf_processor.process_pdf(pdf_url, extract_pdfs=self.extract_pdfs)
-    
-    def clear_pdf_directory(self):
-        return self.pdf_processor.clear_pdf_directory(self)
-    
+        
     def make_safe_filename(self, filename):
         return self.pdf_processor.make_safe_filename(filename)
     
@@ -211,8 +206,8 @@ class CompanyWebsiteScraper:
         self.pdf_processor.save_to_json(self.data, output_file)
 
 if __name__ == "__main__":
-    company_name = "cooperators"  # Replace with the target company name
-    csv_file_path = "filtered_companies_canada.csv"  # Path to your CSV file
+    company_name = sys.argv[1]
+    csv_file_path = "app/service/filtered_companies_canada.csv"  # Path to your CSV file
 
     # Get the company's website
     company_url = "https://" + get_company_website(company_name, csv_file_path)

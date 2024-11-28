@@ -5,6 +5,7 @@ import hashlib
 import time
 import shutil
 import json
+import glob
 
 class PDFProcessor:
     def __init__(self, pdf_directory: str = 'downloaded_pdfs', temp_directory: str = 'temp_downloads', json_directory: str = 'json_files', headers=None):
@@ -141,3 +142,23 @@ class PDFProcessor:
             print(f"Error renaming and moving file: {e}")
             raise
         return new_path
+
+    def combine_json_files(self, output_file="combined_data.json"):
+        combined_data = {}
+
+        try:
+            # Get all JSON files in the directory
+            json_files = glob.glob(os.path.join(self.json_directory, "*.json"))
+
+            # Combine contents of each JSON file
+            for json_file in json_files:
+                with open(json_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    # Merge the data into combined_data
+                    combined_data.update(data)
+
+            # Save combined data to the output file
+            self.save_to_json(combined_data, output_file)
+            print(f"Combined JSON data saved to {output_file}")
+        except Exception as e:
+            print(f"Error combining JSON files: {e}")

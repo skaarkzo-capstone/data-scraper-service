@@ -9,6 +9,7 @@ from utilities.pdf_processor import PDFProcessor
 from sedar_xpaths import *
 from sedar_keywords import sustainability_keywords
 from selenium_stealth import stealth
+import sys
 
 class SedarAutomation:
     def __init__(self, extract_pdfs: bool = True, pdf_directory: str = 'downloaded_pdfs', temp_directory: str = 'temp_downloads', json_directory: str = 'json_files'):
@@ -26,10 +27,6 @@ class SedarAutomation:
 
         # Initialize Selenium WebDriver
         self.driver = self.init_webdriver()
-        self.clear_pdf_directory()
-        self.clear_json_directory()
-        self.clear_temp_directory()
-        print("Cleared all directory")
         self.data = {}
 
     def init_webdriver(self):
@@ -146,20 +143,11 @@ class SedarAutomation:
             if driver.service.is_connectable():
                 driver.quit()
 
-    def clear_pdf_directory(self):
-        return self.pdf_processor.clear_pdf_directory()
-    
-    def clear_json_directory(self):
-        return self.pdf_processor.clear_json_directory()
-    
-    def clear_temp_directory(self):
-        return self.pdf_processor.clear_temp_directory()
-
     def save_to_json(self, output_file):
         self.pdf_processor.save_to_json(self.data, output_file)
 
 if __name__ == "__main__":
-    company_name = "Shopify"
+    company_name = sys.argv[1]
 
     scraper = SedarAutomation()
     
