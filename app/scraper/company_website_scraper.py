@@ -1,5 +1,5 @@
-from website_identifier_service import get_company_website
-from utilities.pdf_processor import PDFProcessor
+from service.website_identifier_service import get_company_website
+from scraper.pdf_scraper import PDFScraper
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -13,7 +13,7 @@ class CompanyWebsiteScraper:
         self.pdf_checked_urls = set()  # Keep track of URLs checked for PDFs on a certain page
         self.extract_pdfs = extract_pdfs
         self.pdf_directory = pdf_directory
-        self.pdf_processor = PDFProcessor(pdf_directory=self.pdf_directory, headers=self.headers)
+        self.pdf_processor = PDFScraper(pdf_directory=self.pdf_directory, headers=self.headers)
         self.data = {}  # Initialize data dictionary
 
         # Create directory for PDFs if it doesn't exist

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.dto.company_scraped_data_dto import CompanyDTO
-from app.service.company_data_service import fetch_company_data
+from scraper.company_website_scraper import fetch_company_data
 
 router = APIRouter()
 
