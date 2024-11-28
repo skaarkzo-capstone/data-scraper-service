@@ -1,13 +1,14 @@
 import os
+import sys
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from scraper.pdf_scraper import PDFScraper
-from utilities.sedar_xpaths import *
-from utilities.sedar_keywords import sustainability_keywords
+from app.scraper.pdf_scraper import PDFScraper
+from app.utilities.sedar_xpaths import *
+from app.utilities.sedar_keywords import sustainability_keywords
 from selenium_stealth import stealth
 
 class SedarAutomation:
@@ -146,8 +147,7 @@ class SedarAutomation:
         self.pdf_processor.save_to_json(self.data, output_file)
 
 if __name__ == "__main__":
-    # company_name = sys.argv[1]
-    company_name = "Shopify"
+    company_name = sys.argv[1]
 
     scraper = SedarAutomation()
     

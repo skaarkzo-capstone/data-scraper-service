@@ -1,5 +1,5 @@
 import subprocess
-from scraper.pdf_scraper import PDFScraper
+from app.scraper.pdf_scraper import PDFScraper
 
 def clear_directories():
     processor = PDFScraper()
@@ -11,14 +11,14 @@ def clear_directories():
 def run_company_website_scraper(company_name):
     print(f"Running company_website_scraper.py for {company_name}...")
     subprocess.run(
-        ["python", "app/service/scraper/company_website_scraper.py", company_name], 
+        ["python", "app/scraper/company_website_scraper.py", company_name],
         capture_output=True, text=True
     )
 
 def run_sedar_automation(company_name):
     print(f"Running sedar_automation.py for {company_name}...")
     subprocess.run(
-        ["python", "app/service/automation/sedar_automation.py", company_name], 
+        ["python", "app/automation/sedar_automation.py", company_name],
         capture_output=True, text=True
     )
 
