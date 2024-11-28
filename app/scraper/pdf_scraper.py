@@ -1,11 +1,13 @@
+import glob
+import hashlib
+import json
 import os
+import shutil
+import time
+
 import requests
 from PyPDF2 import PdfReader
-import hashlib
-import time
-import shutil
-import json
-import glob
+
 
 class PDFScraper:
     def __init__(self, pdf_directory: str = 'downloaded_pdfs', temp_directory: str = 'temp_downloads', json_directory: str = 'json_files', headers=None):

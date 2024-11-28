@@ -1,15 +1,18 @@
 import os
 import sys
 import time
+
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from app.scraper.pdf_scraper import PDFScraper
-from app.utilities.sedar_xpaths import *
-from app.utilities.sedar_keywords import sustainability_keywords
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium_stealth import stealth
+
+from app.scraper.pdf_scraper import PDFScraper
+from app.utilities.sedar_keywords import sustainability_keywords
+from app.utilities.sedar_xpaths import *
+
 
 class SedarAutomation:
     def __init__(self, extract_pdfs: bool = True, pdf_directory: str = 'downloaded_pdfs', temp_directory: str = 'temp_downloads', json_directory: str = 'json_files'):

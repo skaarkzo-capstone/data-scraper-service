@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from app.api.scraper.controller import scraper_controller
 
 api_router = APIRouter()

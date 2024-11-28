@@ -1,9 +1,12 @@
-from app.service.website_identifier_service import get_company_website
-from app.scraper.pdf_scraper import PDFScraper
-import requests
-from bs4 import BeautifulSoup
 import os
 import sys
+
+import requests
+from bs4 import BeautifulSoup
+
+from app.scraper.pdf_scraper import PDFScraper
+from app.service.website_identifier_service import get_company_website
+
 
 class CompanyWebsiteScraper:
     def __init__(self, base_url, extract_pdfs=True, pdf_directory='downloaded_pdfs'):

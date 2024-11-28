@@ -1,5 +1,7 @@
 import subprocess
+
 from app.scraper.pdf_scraper import PDFScraper
+
 
 def clear_directories():
     processor = PDFScraper()
