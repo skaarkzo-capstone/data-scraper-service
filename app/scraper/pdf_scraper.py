@@ -7,7 +7,7 @@ import shutil
 import json
 import glob
 
-class PDFProcessor:
+class PDFScraper:
     def __init__(self, pdf_directory: str = 'downloaded_pdfs', temp_directory: str = 'temp_downloads', json_directory: str = 'json_files', headers=None):
         self.pdf_directory = pdf_directory
         self.temp_directory = temp_directory

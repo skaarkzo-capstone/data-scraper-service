@@ -1,15 +1,15 @@
 import os
+import sys
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from utilities.pdf_processor import PDFProcessor
-from sedar_xpaths import *
-from sedar_keywords import sustainability_keywords
+from app.scraper.pdf_scraper import PDFScraper
+from app.utilities.sedar_xpaths import *
+from app.utilities.sedar_keywords import sustainability_keywords
 from selenium_stealth import stealth
-import sys
 
 class SedarAutomation:
     def __init__(self, extract_pdfs: bool = True, pdf_directory: str = 'downloaded_pdfs', temp_directory: str = 'temp_downloads', json_directory: str = 'json_files'):
@@ -19,8 +19,8 @@ class SedarAutomation:
         self.temp_directory = temp_directory
         self.json_directory = json_directory
 
-        # Initialize PDFProcessor with both PDF and JSON directories
-        self.pdf_processor = PDFProcessor(pdf_directory=self.pdf_directory, temp_directory=self.temp_directory, json_directory=self.json_directory)
+        # Initialize PDFScraper with both PDF and JSON directories
+        self.pdf_processor = PDFScraper(pdf_directory=self.pdf_directory, temp_directory=self.temp_directory, json_directory=self.json_directory)
 
         # Use keywords from the sedar_keywords file
         self.sustainability_keywords = sustainability_keywords
