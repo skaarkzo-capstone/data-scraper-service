@@ -1,23 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from fastapi.responses import JSONResponse
+from app.dto.requests.process_request_dto import ProcessRequest
 import subprocess
 import os
 import json
 
 router = APIRouter()
 
-@router.get("/")
-def test_route():
-    return "works!"
-
 SERVICE_SCRIPT = "app.service.scraper_service"
-
-# Define the request body model
-class ProcessRequest(BaseModel):
-    company_name: str
-    website: bool
-    sedar: bool
 
 def run_service(company_name: str, website: bool, sedar: bool):
     # Prepare arguments for the service script based on flags
