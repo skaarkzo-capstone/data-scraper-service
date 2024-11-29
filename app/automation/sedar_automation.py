@@ -13,6 +13,7 @@ from app.scraper.pdf_scraper import PDFScraper
 from app.util.sedar_keywords import sustainability_keywords
 from app.util.sedar_xpaths import *
 
+# This is the Sedar Automation. It will automate the process of entering the data (such as company name) to get the Anual Report pdf then scrape its data using keywords.
 
 class SedarAutomation:
     def __init__(self, extract_pdfs: bool = True, pdf_directory: str = 'downloaded_pdfs', temp_directory: str = 'temp_downloads', json_directory: str = 'json_files'):
