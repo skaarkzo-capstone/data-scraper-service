@@ -10,8 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium_stealth import stealth
 
 from app.scraper.pdf_scraper import PDFScraper
-from app.utilities.sedar_keywords import sustainability_keywords
-from app.utilities.sedar_xpaths import *
+from app.util.sedar_keywords import sustainability_keywords
+from app.util.sedar_xpaths import *
 
 
 class SedarAutomation:
