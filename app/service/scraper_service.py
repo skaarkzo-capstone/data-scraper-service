@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 
 from app.scraper.pdf_scraper import PDFScraper
@@ -35,15 +36,24 @@ def combine_all_json_files(output_file="combined_results.json"):
     print(f"Combined JSON files into {output_file}")
 
 if __name__ == "__main__":
-    company_name = "Shopify"
+    parser = argparse.ArgumentParser(description="Run automation tasks for a company.")
+    parser.add_argument("company_name", type=str, help="The name of the company to process.")
+    parser.add_argument("--website", action="store_true", help="Run the website scraper.")
+    parser.add_argument("--sedar", action="store_true", help="Run the SEDAR automation.")
 
     print("Starting the automation tasks...")
-    
+
+    args = parser.parse_args()
+
+    print("Starting the automation tasks...")
+
     clear_directories()
 
-    run_company_website_scraper(company_name)
+    if args.website:
+        run_company_website_scraper(args.company_name)
 
-    run_sedar_automation(company_name)
+    if args.sedar:
+        run_sedar_automation(args.company_name)
     
     combine_all_json_files()
 
