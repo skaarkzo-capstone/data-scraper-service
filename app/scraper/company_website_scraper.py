@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 
 from app.scraper.pdf_scraper import PDFScraper
 from app.service.website_identifier_service import get_company_website
+import app.util.website_keywords as wk
 
 """
 This script defines a web scraping tool to extract structured data and PDF documents 
@@ -36,23 +37,10 @@ class CompanyWebsiteScraper:
             os.makedirs(self.pdf_directory)
 
         # Keywords to identify sections of interest on the website
-        self.keywords = {
-            'about': ["about", "our story", "company", "about us"],
-            'sustainability': ["sustainability", "csr", "environment", "climate"],
-            'reports': ["annual report", "sustainability report", "investor relations", "financial report", "pdf",
-                        "download"],
-            'products': ["product", "products", "services", "offerings", "solutions", "features"]
-        }
+        self.keywords = wk.keywords
 
         # Keywords to exclude certain pages (e.g., login, careers, etc.)
-        self.exclusion_keywords = [
-            "login", "sign in", "sign_in", "signin", "sign-in",
-            "privacy policy", "terms", "terms of service", "terms-of-service",
-            "careers", "jobs", "employment",
-            "support", "help", "faq", "documentation", "customer service",
-            "contact us", "contactus", "contact-us", "blog", "newsletter",
-            "what's new"
-        ]
+        self.exclusion_keywords = wk.exclusion_keywords
 
     def scrape(self):
         """
