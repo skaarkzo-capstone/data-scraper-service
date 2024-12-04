@@ -76,8 +76,6 @@ class SedarAutomation:
             driver.get(self.base_url)
             print("Loaded SEDAR+ homepage")
 
-            driver.save_screenshot("temp_downloads/Homepage.png")
-
             # Going to Search Page
             search_button = wait.until(EC.element_to_be_clickable((By.XPATH, SEARCH_BUTTON)))
             search_button.click()

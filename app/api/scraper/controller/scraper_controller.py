@@ -17,11 +17,15 @@ def run_service(company_name: str, website: bool, sedar: bool):
     if sedar:
         args.append("--sedar")
 
+    print(f"Running the scraper using args: {args}")
+
     command = ["python", "-m", SERVICE_SCRIPT, *args]
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode != 0:
         raise RuntimeError(f"Service error: {result.stderr.strip()}")
+    
+    print("Completed")
 
     return result.stdout
 
