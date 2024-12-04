@@ -43,6 +43,7 @@ class SedarAutomation:
             "safebrowsing.enabled": True,
         }
         chrome_options.add_experimental_option("prefs", prefs)
+        chrome_options.add_argument("--start-maximized")
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
@@ -74,6 +75,8 @@ class SedarAutomation:
             # Enter form and download the PDF
             driver.get(self.base_url)
             print("Loaded SEDAR+ homepage")
+
+            driver.save_screenshot("temp_downloads/Homepage.png")
 
             # Going to Search Page
             search_button = wait.until(EC.element_to_be_clickable((By.XPATH, SEARCH_BUTTON)))
