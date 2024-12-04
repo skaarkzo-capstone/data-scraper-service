@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from app.dto.request.process_request import ProcessRequest
+from app.model.request.process_request import ProcessRequest
 import subprocess
 import os
 import json
