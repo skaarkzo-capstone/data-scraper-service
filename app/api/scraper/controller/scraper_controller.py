@@ -25,7 +25,7 @@ def run_service(company_name: str, website: bool, sedar: bool):
 
     return result.stdout
 
-@router.post("/")
+@router.post("")
 def process_company(request: ProcessRequest):
     try:
         # Call the service with the provided parameters
