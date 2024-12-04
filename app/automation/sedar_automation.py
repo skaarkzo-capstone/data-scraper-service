@@ -43,6 +43,7 @@ class SedarAutomation:
             "safebrowsing.enabled": True,
         }
         chrome_options.add_experimental_option("prefs", prefs)
+        chrome_options.add_argument("--start-maximized")
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
