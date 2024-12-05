@@ -11,6 +11,9 @@ SERVICE_SCRIPT = "app.service.scraper_service"
 
 def run_service(company_name: str, website: bool, sedar: bool):
     # Prepare arguments for the service script based on flags
+
+    company_name = company_name.strip().lower()
+
     args = [company_name]
     if website:
         args.append("--website")
