@@ -15,10 +15,15 @@ def run_service(company_name: str, website: bool, sedar: bool):
     company_name = company_name.strip().lower()
 
     args = [company_name]
+
+    tasks = []
     if website:
-        args.append("--website")
+        tasks.append("website")
     if sedar:
-        args.append("--sedar")
+        tasks.append("sedar")
+
+    if tasks:
+        args.extend(["--tasks", *tasks])
 
     print(f"Running the scraper using args: {args}")
 
@@ -26,9 +31,10 @@ def run_service(company_name: str, website: bool, sedar: bool):
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode != 0:
+        print(f"Error running service: {result.stderr.strip()}")
         raise RuntimeError(f"Service error: {result.stderr.strip()}")
     
-    print("Completed")
+    print("Service output:", result.stdout)
 
     return result.stdout
 

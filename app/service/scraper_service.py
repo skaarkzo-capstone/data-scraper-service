@@ -1,7 +1,15 @@
 import argparse
-import subprocess
+import concurrent.futures
 
 from app.scraper.pdf_scraper import PDFScraper
+from app.service.utils import run_subprocess
+
+# Task registry for dynamically adding and managing tasks
+TASK_REGISTRY = {}
+
+# Register a new task in the registry
+def register_task(name, function):
+    TASK_REGISTRY[name] = function
 
 # Clears the downloads, json and temp folders
 def clear_directories():
@@ -11,17 +19,15 @@ def clear_directories():
     processor.clear_json_directory()
     print("Cleared all directories")
 
-# Script to run a python scripts. 
-def run_subprocess(module_path, *args):
-    command = ["python", "-m", module_path, *args] # Setting the command. Same as running 'python -m script_path' in terinal
-    print(f"Running command: {' '.join(command)}")
-    result = subprocess.run(command, capture_output=True, text=True) # Running the command
-    print(f"Subprocess completed with return code {result.returncode}")
-    if result.stdout:
-        print("Output:", result.stdout)
-    if result.stderr:
-        print("Error:", result.stderr)
-    return result
+# Script to run a python scripts in parallel
+def run_tasks_in_parallel(tasks, company_name):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(task, company_name) for task in tasks]
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                print(f"Error occurred while running task: {e}")
 
 # Runs the website scraper
 def run_company_website_scraper(company_name):
@@ -33,6 +39,10 @@ def run_sedar_automation(company_name):
     print(f"Running sedar_automation for {company_name}...")
     run_subprocess("app.automation.sedar_automation", company_name)
 
+# Registering tasks
+register_task("website", run_company_website_scraper)
+register_task("sedar", run_sedar_automation)
+
 # Combines all json files in the json folder
 def combine_all_json_files(output_file="combined_results.json"):
     processor = PDFScraper()
@@ -42,8 +52,7 @@ def combine_all_json_files(output_file="combined_results.json"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run automation tasks for a company.")
     parser.add_argument("company_name", type=str, help="The name of the company to process.")
-    parser.add_argument("--website", action="store_true", help="Run the website scraper.")
-    parser.add_argument("--sedar", action="store_true", help="Run the SEDAR automation.")
+    parser.add_argument("--tasks", nargs="*", choices=TASK_REGISTRY.keys(), help="Run the scrapers and automations.")
 
     print("Starting the automation tasks...")
 
@@ -54,13 +63,10 @@ if __name__ == "__main__":
     # Clears the downloads, json and temp folders
     clear_directories()
 
-    # Runs the website scraper
-    if args.website:
-        run_company_website_scraper(args.company_name)
-
-    # Runs the sedar automation scraper
-    if args.sedar:
-        run_sedar_automation(args.company_name)
+    # Runs the scrapers and automations in parallel
+    if args.tasks:
+        tasks_to_run = [TASK_REGISTRY[task] for task in args.tasks]
+        run_tasks_in_parallel(tasks_to_run, args.company_name)
     
     # Combines all json files in the json folder
     combine_all_json_files()
