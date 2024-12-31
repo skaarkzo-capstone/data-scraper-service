@@ -35,6 +35,7 @@ class PDFScraper:
         self.json_directory = json_directory
         self.headers = headers or {"User-Agent": "Mozilla/5.0"}
 
+        # Ensure directories exist
         os.makedirs(self.pdf_directory, exist_ok=True)
         os.makedirs(self.json_directory, exist_ok=True)
         os.makedirs(self.temp_directory, exist_ok=True)
