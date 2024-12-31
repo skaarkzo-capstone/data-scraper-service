@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from bs4 import BeautifulSoup
 from app.scraper.pdf_scraper import PDFScraper
 from app.service.website_identifier_service import get_company_website
@@ -33,6 +34,10 @@ class CompanyWebsiteScraper:
         self.keywords = wk.keywords
         self.exclusion_keywords = wk.exclusion_keywords
 
+        # Optional: lower recursion depth to limit link exploration
+        # (Reduces processing time at the cost of skipping deeper pages)
+        self.default_max_depth = 1  # or keep it 2 if needed
+
     def scrape(self):
         """
         Main entry point to scrape predefined sections (e.g., 'about', 'sustainability', 'reports', 'products').
@@ -42,13 +47,12 @@ class CompanyWebsiteScraper:
             print(f"Scraping section: {section}")
             section_links = self.get_relevant_links(self.base_url, keywords)
 
-            # For the 'products' section, also include navbar links
             if section == 'products':
                 navbar_links = self.get_navbar_links(self.base_url, keywords)
                 section_links.update(navbar_links)
 
-            # Adjust recursion depth based on the section
-            max_depth = 2 if section not in ['reports', 'products'] else 1
+            # Optional: reduce max_depth for faster processing
+            max_depth = 1 if section in ['reports', 'products'] else self.default_max_depth
 
             for link_text, url in section_links.items():
                 content = self.explore_and_scrape(url, keywords, current_depth=0, max_depth=max_depth)
@@ -95,7 +99,7 @@ class CompanyWebsiteScraper:
                 print("Navigation menu not found.")
         return navbar_links
 
-    def explore_and_scrape(self, url, keywords, current_depth=0, max_depth=2):
+    def explore_and_scrape(self, url, keywords, current_depth=0, max_depth=1):
         """
         Recursively explore a webpage to extract textual content, PDFs, and nested links,
         stopping if the URL has been visited or the max depth is reached.
@@ -118,27 +122,21 @@ class CompanyWebsiteScraper:
         if not soup:
             return None
 
-        # Extract main text content
-        page_data["content"] = self.extract_page_text(soup)
+        page_data["content"] = "\n".join(p.get_text(strip=True) for p in soup.find_all("p"))
 
-        # Identify and process PDFs
+        # Identify and process PDFs (in parallel if needed)
         page_pdf_links = self.find_pdfs_on_page(soup, keywords)
         for pdf_url in page_pdf_links:
-            pdf_info = self.process_pdf(pdf_url)
+            pdf_info = self.pdf_processor.process_pdf(pdf_url, extract_pdfs=self.extract_pdfs)
             if pdf_info:
                 page_data["pdfs"].append(pdf_info)
 
-        # Recursively explore nested links
         if current_depth < max_depth:
             self.explore_nested_links(soup, keywords, current_depth, max_depth, page_data)
 
         return page_data
 
     def explore_nested_links(self, soup, keywords, current_depth, max_depth, page_data):
-        """
-        Recursively explore and scrape links within a BeautifulSoup object,
-        adding found link data to the page_data["links"].
-        """
         for link in soup.find_all("a", href=True):
             link_text = link.get_text(strip=True)
             link_text_lower = link_text.lower()
@@ -153,18 +151,13 @@ class CompanyWebsiteScraper:
                 if nested_content:
                     page_data["links"][link_text] = nested_content
 
-    def extract_page_text(self, soup):
-        """
-        Return concatenated text from all <p> tags in the soup.
-        """
-        return "\n".join(p.get_text(strip=True) for p in soup.find_all("p"))
-
     def find_pdfs_on_page(self, soup, keywords):
         """
-        Identify PDF links on a webpage (by .pdf extension or content type).
-        Returns a list of PDF URLs.
+        Identify PDF links on a webpage (by .pdf extension or by content type check).
+        Uses parallel HEAD requests only when needed.
         """
         pdf_urls = []
+        potential_pdf_links = []
         for link in soup.find_all("a", href=True):
             href = link["href"]
             text_lower = link.get_text(strip=True).lower()
@@ -177,52 +170,60 @@ class CompanyWebsiteScraper:
             if self.is_excluded_link(text_lower, full_url):
                 continue
 
-            is_pdf = False
-            # Check file extension
+            # If it ends with .pdf, no need for HEAD
             if href.lower().endswith(".pdf"):
-                is_pdf = True
-            # Or check text/content type
-            elif 'pdf' in text_lower or 'download' in text_lower \
-                    or any(kw in text_lower for kw in self.keywords.get('reports', [])):
-                try:
-                    head = requests.head(full_url, headers=self.headers, allow_redirects=True, timeout=10)
-                    content_type = head.headers.get('Content-Type', '').lower()
-                    if 'pdf' in content_type:
-                        is_pdf = True
-                except Exception as e:
-                    print(f"Error checking {full_url}: {e}")
-                    continue
-
-            if is_pdf:
                 pdf_urls.append(full_url)
+                continue
 
+            # If text suggests a PDF, we collect it for HEAD check
+            if 'pdf' in text_lower or 'download' in text_lower \
+                    or any(kw in text_lower for kw in self.keywords.get('reports', [])):
+                potential_pdf_links.append(full_url)
+
+        # Run HEAD checks in parallel
+        pdf_urls += self._check_potential_pdfs(potential_pdf_links)
         return pdf_urls
 
-    def process_pdf(self, pdf_url):
+    def _check_potential_pdfs(self, links):
         """
-        Download and process a PDF via PDFScraper.
-        Returns extracted PDF data (or None).
+        Perform parallel HEAD requests for suspected PDF links.
+        Returns a list of links confirmed to be PDFs.
         """
-        return self.pdf_processor.process_pdf(pdf_url, extract_pdfs=self.extract_pdfs)
+        confirmed_pdfs = []
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {
+                executor.submit(self._check_pdf_head, link): link
+                for link in links
+            }
+            for future in as_completed(futures):
+                link = futures[future]
+                try:
+                    if future.result():
+                        confirmed_pdfs.append(link)
+                except Exception as e:
+                    print(f"Error checking {link}: {e}")
+
+        return confirmed_pdfs
+
+    def _check_pdf_head(self, url):
+        """
+        Check if a URL is a PDF by HEAD request (content type).
+        """
+        try:
+            head = requests.head(url, headers=self.headers, allow_redirects=True, timeout=10)
+            return 'pdf' in head.headers.get('Content-Type', '').lower()
+        except Exception:
+            return False
 
     def is_excluded_link(self, text, url):
-        """
-        Determine if a link should be excluded based on exclusion keywords.
-        """
         combined_text = f"{text} {url}"
         return any(keyword in combined_text.lower() for keyword in self.exclusion_keywords)
 
     def get_full_url(self, href):
-        """
-        Convert a relative URL to an absolute URL if needed.
-        """
         return href if href.startswith("http") else f"{self.base_url}/{href.lstrip('/')}"
 
     def get_soup(self, url):
-        """
-        Fetch and parse the HTML content at `url`.
-        Returns a BeautifulSoup object or None on failure.
-        """
         try:
             response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
@@ -232,15 +233,9 @@ class CompanyWebsiteScraper:
             return None
 
     def save_to_json(self, output_file):
-        """
-        Save the collected `self.data` to a JSON file via the PDFScraper.
-        """
         self.pdf_processor.save_to_json(self.data, output_file)
 
     def make_safe_filename(self, filename):
-        """
-        Ensure a filename is safe for file systems by replacing invalid characters.
-        """
         return self.pdf_processor.make_safe_filename(filename)
 
 
