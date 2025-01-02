@@ -67,7 +67,7 @@ def run_sedar_automation(company_name):
     """
     logger.info("Running sedar_automation for %s...", company_name)
     try:
-        run_subprocess("app.automation.sedar_automation", company_name)
+        run_subprocess("app.scraper.automation.sedar_automation", company_name)
     except Exception as e:
         logger.exception("Error in run_sedar_automation.")
         traceback.print_exc()
