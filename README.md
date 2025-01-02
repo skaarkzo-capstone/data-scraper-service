@@ -1,6 +1,6 @@
 # Project Overview
 
-This project automates the process of collecting sustainability-related data from company websites and SEDAR (via Selenium), then consolidates the results into a JSON file. It leverages FastAPI for the API layer, Selenium for SEDAR automation, various scrapers for PDF and website content, and a coordinated service to combine data.
+This project automates the process of collecting sustainability-related data, it retrieves the data from multiple sources, then consolidates the results into a JSON file. It leverages FastAPI for the API layer, Selenium, various scrapers for PDF and website content, and a coordinated service to combine data.
 
 ## Key Features
 
