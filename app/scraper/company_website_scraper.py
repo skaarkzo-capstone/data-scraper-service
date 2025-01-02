@@ -1,6 +1,8 @@
 import os
 import sys
 import requests
+import logging
+import traceback
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from bs4 import BeautifulSoup
@@ -8,17 +10,20 @@ from app.scraper.pdf_scraper import PDFScraper
 from app.service.website_identifier_service import get_company_website
 import app.util.website_keywords as wk
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 class CompanyWebsiteScraper:
     """
     A web scraping tool for extracting structured data and PDF documents from a company's website.
-
     It scans specific sections identified by keywords (e.g., 'about', 'sustainability', 'reports', 'products'),
     processes linked PDF files, handles navigation bar links, and excludes irrelevant pages based on
     exclusion keywords. The extracted data is stored in a JSON for further use.
     """
 
     def __init__(self, base_url, extract_pdfs=True, pdf_directory='downloaded_pdfs'):
+        logger.info("Initializing CompanyWebsiteScraper with base_url: %s", base_url)
         self.base_url = base_url.rstrip('/')
         self.headers = {"User-Agent": "Mozilla/5.0"}
         self.explored_urls = set()
@@ -38,31 +43,35 @@ class CompanyWebsiteScraper:
 
         # Optional: lower recursion depth to limit link exploration
         # (Reduces processing time at the cost of skipping deeper pages)
-        self.default_max_depth = 1  # or keep it 2 if needed
+        self.default_max_depth = 1
 
     def scrape(self):
         """
         Main entry point to scrape predefined sections (e.g., 'about', 'sustainability', 'reports', 'products').
-        Fetch relevant links, include navbar links for 'products', then recursively scrape.
         """
-        for section, keywords in self.keywords.items():
-            print(f"Scraping section: {section}")
-            # Get all links relevant to the section
-            section_links = self.get_relevant_links(self.base_url, keywords)
+        logger.info("Starting website scrape for: %s", self.base_url)
+        try:
+            for section, keywords in self.keywords.items():
+                logger.info("Scraping section: %s", section)
+                # Get all links relevant to the section
+                section_links = self.get_relevant_links(self.base_url, keywords)
 
-            # For the 'products' section, include navbar links as they often contain product information
-            if section == 'products':
-                navbar_links = self.get_navbar_links(self.base_url, keywords)
-                section_links.update(navbar_links)
+                # For the 'products' section, include navbar links as they often contain product information
+                if section == 'products':
+                    navbar_links = self.get_navbar_links(self.base_url, keywords)
+                    section_links.update(navbar_links)
 
-            # Optional: reduce max_depth for faster processing
-            max_depth = 1 if section in ['reports', 'products'] else self.default_max_depth
+                # Can reduce max_depth for faster processing
+                max_depth = 1 if section in ['reports', 'products'] else self.default_max_depth
 
-            for link_text, url in section_links.items():
-                content = self.explore_and_scrape(url, keywords, current_depth=0, max_depth=max_depth)
-                # Add the scraped content to the data structure
-                if content:
-                    self.data.setdefault(section, {})[link_text] = content
+                for link_text, url in section_links.items():
+                    content = self.explore_and_scrape(url, keywords, current_depth=0, max_depth=max_depth)
+                    # Add the scraped content to the data structure
+                    if content:
+                        self.data.setdefault(section, {})[link_text] = content
+        except Exception as e:
+            logger.exception("Error in main scrape.")
+            traceback.print_exc()
 
     def get_relevant_links(self, url, keywords):
         """
@@ -73,19 +82,17 @@ class CompanyWebsiteScraper:
         soup = self.get_soup(url)
         if soup:
             for link in soup.find_all("a", href=True):
-                text_lower = link.get_text(strip=True).lower() # Extract link text and normalize to lowercase
-                href = link["href"] # Extract the hyperlink reference
-                if any(keyword in text_lower for keyword in keywords): # Check if any keyword matches
-                    full_url = self.get_full_url(href) # Convert to absolute URL
-                    if not self.is_excluded_link(text_lower, full_url): # Exclude irrelevant links
+                text_lower = link.get_text(strip=True).lower()  # Extract link text and normalize to lowercase
+                href = link["href"]  # Extract the hyperlink reference
+                if any(keyword in text_lower for keyword in keywords):  # Check if any keyword matches
+                    full_url = self.get_full_url(href)  # Convert to absolute URL
+                    if not self.is_excluded_link(text_lower, full_url):  # Exclude irrelevant links
                         relevant_links[text_lower] = full_url
         return relevant_links
 
     def get_navbar_links(self, url, keywords):
         """
-        Specifically fetch links from the website's navigation bar.
-        Useful for finding product-related pages.
-        Returns { link_text: full_url }.
+        Specifically fetch links from the website's navigation bar (useful for finding product-related pages).
         """
         navbar_links = {}
         soup = self.get_soup(url)
@@ -101,20 +108,19 @@ class CompanyWebsiteScraper:
                         if not self.is_excluded_link(text_lower, full_url):
                             navbar_links[text_lower] = full_url
             else:
-                print("Navigation menu not found.")
+                logger.info("Navigation menu not found.")
         return navbar_links
 
     def explore_and_scrape(self, url, keywords, current_depth=0, max_depth=1):
         """
         Recursively explore a webpage to extract textual content, PDFs, and nested links,
         stopping if the URL has been visited or the max depth is reached.
-        Returns a dict: { "url", "content", "pdfs", "links" }.
         """
         if url in self.explored_urls or current_depth > max_depth:
-            return None # Stop recursion if the URL is already visited or max depth is reached
+            return None
 
-        print(f"Exploring: {url}")
-        self.explored_urls.add(url) # Mark the URL as visited
+        logger.info("Exploring: %s", url)
+        self.explored_urls.add(url)  # Mark the URL as visited
 
         page_data = {
             "url": url,
@@ -141,17 +147,19 @@ class CompanyWebsiteScraper:
 
         return page_data
 
-    # Recursively explore nested links within the current page
     def explore_nested_links(self, soup, keywords, current_depth, max_depth, page_data):
+        """
+        Recursively explore nested links within the current page.
+        """
         for link in soup.find_all("a", href=True):
             link_text = link.get_text(strip=True)
             link_text_lower = link_text.lower()
             full_url = self.get_full_url(link["href"])
 
             if (
-                full_url not in self.explored_urls
-                and not self.is_excluded_link(link_text_lower, full_url)
-                and any(keyword in link_text_lower for keyword in keywords)
+                    full_url not in self.explored_urls
+                    and not self.is_excluded_link(link_text_lower, full_url)
+                    and any(keyword in link_text_lower for keyword in keywords)
             ):
                 nested_content = self.explore_and_scrape(full_url, keywords, current_depth + 1, max_depth)
                 if nested_content:
@@ -160,7 +168,6 @@ class CompanyWebsiteScraper:
     def find_pdfs_on_page(self, soup, keywords):
         """
         Identify PDF links on a webpage (by .pdf extension or by content type check).
-        Uses parallel HEAD requests only when needed.
         """
         pdf_urls = []
         potential_pdf_links = []
@@ -169,9 +176,9 @@ class CompanyWebsiteScraper:
             text_lower = link.get_text(strip=True).lower()
             full_url = self.get_full_url(href)
 
-            if full_url in self.pdf_checked_urls: # Skip already checked URLs
+            if full_url in self.pdf_checked_urls:  # Skip already checked URLs
                 continue
-            self.pdf_checked_urls.add(full_url) # Mark the URL as checked
+            self.pdf_checked_urls.add(full_url)  # Mark the URL as checked
 
             if self.is_excluded_link(text_lower, full_url):
                 continue
@@ -196,53 +203,65 @@ class CompanyWebsiteScraper:
         Returns a list of links confirmed to be PDFs.
         """
         confirmed_pdfs = []
-
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = {
-                executor.submit(self._check_pdf_head, link): link
-                for link in links
-            }
+            futures = {executor.submit(self._check_pdf_head, link): link for link in links}
             for future in as_completed(futures):
                 link = futures[future]
                 try:
                     if future.result():
                         confirmed_pdfs.append(link)
                 except Exception as e:
-                    print(f"Error checking {link}: {e}")
-
+                    logger.exception("Error checking %s", link)
+                    traceback.print_exc()
         return confirmed_pdfs
 
     def _check_pdf_head(self, url):
         """
-        Check if a URL is a PDF by HEAD request (content type).
+        Check if a URL is a PDF by sending a HEAD request and looking at the content type.
         """
         try:
             head = requests.head(url, headers=self.headers, allow_redirects=True, timeout=10)
             return 'pdf' in head.headers.get('Content-Type', '').lower()
-        except Exception:
+        except Exception as e:
+            logger.exception("Error in HEAD request for %s", url)
+            traceback.print_exc()
             return False
 
     def is_excluded_link(self, text, url):
+        """
+        Exclude links based on certain keywords (e.g., disclaimers).
+        """
         combined_text = f"{text} {url}"
         return any(keyword in combined_text.lower() for keyword in self.exclusion_keywords)
 
     def get_full_url(self, href):
+        """
+        Convert a relative URL to an absolute one.
+        """
         return href if href.startswith("http") else f"{self.base_url}/{href.lstrip('/')}"
 
     def get_soup(self, url):
+        """
+        Safely fetch and parse a webpage with BeautifulSoup.
+        """
         try:
             response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
             return BeautifulSoup(response.text, "html.parser")
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching {url}: {e}")
+            logger.exception("Error fetching %s", url)
+            traceback.print_exc()
             return None
 
     def save_to_json(self, output_file):
-        self.pdf_processor.save_to_json(self.data, output_file)
-
-    def make_safe_filename(self, filename):
-        return self.pdf_processor.make_safe_filename(filename)
+        """
+        Save the scraped data to a JSON file.
+        """
+        try:
+            self.pdf_processor.save_to_json(self.data, output_file)
+        except Exception as e:
+            logger.exception("Error saving scraped data to JSON.")
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
@@ -250,13 +269,13 @@ if __name__ == "__main__":
     csv_file_path = "app/scraper/filtered_companies_canada.csv"
 
     # Fetch the company's website URL
-    company_url = "https://" + get_company_website(company_name, csv_file_path)
-    if company_url:
-        print(f"Found website: {company_url}")
+    website_url = get_company_website(company_name, csv_file_path)
+    if website_url:
+        website_url = "https://" + website_url
+        logger.info("Found website: %s", website_url)
 
-    scraper = CompanyWebsiteScraper(company_url)
-    scraper.scrape()
+        scraper = CompanyWebsiteScraper(website_url)
+        scraper.scrape()
 
-    # Save the scraped data to a JSON file
-    output_file = f"{company_name.replace(' ', '_')}_scraped_data.json"
-    scraper.save_to_json(output_file)
+        output_file = f"{company_name.replace(' ', '_')}_scraped_data.json"
+        scraper.save_to_json(output_file)
