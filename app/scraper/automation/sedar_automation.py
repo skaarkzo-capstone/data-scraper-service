@@ -130,10 +130,15 @@ class SedarAutomation:
             print("Clicked Search button")
             time.sleep(5)
 
-            # Download PDF
-            download_pdf = wait.until(EC.presence_of_element_located((By.XPATH, DOWNLOAD_PDF)))
-            download_pdf.click()
-            print("Downloading PDF...")
+            # Check if Anual Report is available
+            try:
+                download_pdf = wait.until(EC.presence_of_element_located((By.XPATH, DOWNLOAD_PDF)))
+                download_pdf.click()
+                print("Downloading PDF...")
+            except (TimeoutException, WebDriverException) as e:
+                print(f"No annual report found for the company: {company_name}")
+                return
+
             time.sleep(10)
 
             # Get the downloaded file
