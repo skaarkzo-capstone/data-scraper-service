@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium_stealth import stealth
 
@@ -13,11 +14,13 @@ from app.scraper.pdf_scraper import PDFScraper
 from app.util.sedar_keywords import sustainability_keywords
 from app.util.sedar_xpaths import *
 
+
 # This is the Sedar Automation. It will automate the process of entering the data (such as company name) to get the
 # Annual Report pdf then scrape its data using keywords.
 
 class SedarAutomation:
-    def __init__(self, extract_pdfs: bool = True, pdf_directory: str = 'downloaded_pdfs', temp_directory: str = 'temp_downloads', json_directory: str = 'json_files'):
+    def __init__(self, extract_pdfs: bool = True, pdf_directory: str = 'downloaded_pdfs',
+                 temp_directory: str = 'temp_downloads', json_directory: str = 'json_files'):
         self.base_url = 'https://www.sedarplus.ca'
         self.extract_pdfs = extract_pdfs
         self.pdf_directory = pdf_directory
@@ -25,7 +28,8 @@ class SedarAutomation:
         self.json_directory = json_directory
 
         # Initialize PDFScraper with both PDF and JSON directories
-        self.pdf_processor = PDFScraper(pdf_directory=self.pdf_directory, temp_directory=self.temp_directory, json_directory=self.json_directory)
+        self.pdf_processor = PDFScraper(pdf_directory=self.pdf_directory, temp_directory=self.temp_directory,
+                                        json_directory=self.json_directory)
 
         # Use keywords from the sedar_keywords file
         self.sustainability_keywords = sustainability_keywords
@@ -76,8 +80,13 @@ class SedarAutomation:
             driver.get(self.base_url)
             print("Loaded SEDAR+ homepage")
 
-            # Going to Search Page
-            search_button = wait.until(EC.element_to_be_clickable((By.XPATH, SEARCH_BUTTON)))
+            # Check if the search button is clickable (if not, SEDAR may be down)
+            try:
+                search_button = wait.until(EC.element_to_be_clickable((By.XPATH, SEARCH_BUTTON)))
+            except (TimeoutException, WebDriverException) as e:
+                print("SEDAR is down or the search button is not available. Stopping early.")
+                return  # Cut the process short here
+
             search_button.click()
             print("Clicked Search button")
             wait.until(EC.presence_of_element_located((By.XPATH, PROFILE_NAME_INPUT)))
@@ -152,14 +161,15 @@ class SedarAutomation:
     def save_to_json(self, output_file):
         self.pdf_processor.save_to_json(self.data, output_file)
 
+
 if __name__ == "__main__":
     company_name = sys.argv[1]
 
     scraper = SedarAutomation()
-    
+
     # Download, process, and analyze the report
     pdf_path = scraper.download_company_annual_report(company_name)
-    
+
     # Save the extracted data to JSON
     output_file = f"{company_name.replace(' ', '_')}_sustainability_data.json"
     scraper.save_to_json(output_file)

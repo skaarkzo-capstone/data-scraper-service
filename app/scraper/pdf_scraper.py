@@ -5,31 +5,32 @@ import os
 import shutil
 import time
 import requests
+import logging
+import traceback
 
 from PyPDF2 import PdfReader
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 class PDFScraper:
     """
     Provides tools for downloading, extracting, analyzing, and managing PDF documents.
-
-    Features:
-        - Unique file naming
-        - Text extraction
-        - Keyword-based analysis
-        - JSON data saving
     """
 
     def __init__(
-        self,
-        pdf_directory: str = 'downloaded_pdfs',
-        temp_directory: str = 'temp_downloads',
-        json_directory: str = 'json_files',
-        headers=None
+            self,
+            pdf_directory='downloaded_pdfs',
+            temp_directory='temp_downloads',
+            json_directory='json_files',
+            headers=None
     ):
         """
         Initialize the PDFScraper with directory paths and HTTP headers.
         Ensures all required directories exist.
         """
+        logger.info("Initializing PDFScraper.")
         self.pdf_directory = pdf_directory
         self.temp_directory = temp_directory
         self.json_directory = json_directory
@@ -43,10 +44,8 @@ class PDFScraper:
     def process_pdf(self, pdf_url, extract_pdfs=True):
         """
         Downloads a PDF from the given URL, saves it with a unique filename, and extracts its text content.
-        Returns a dictionary with PDF metadata and extracted text (if extract_pdfs=True).
         """
-        print(f"Processing PDF: {pdf_url}")
-
+        logger.info("Processing PDF: %s", pdf_url)
         try:
             response = self._download_pdf_content(pdf_url)
             if extract_pdfs:
@@ -59,7 +58,8 @@ class PDFScraper:
             else:
                 return {"url": pdf_url}
         except Exception as e:
-            print(f"Error downloading PDF from {pdf_url}: {e}")
+            logger.exception("Error downloading PDF from %s", pdf_url)
+            traceback.print_exc()
             return None
 
     @staticmethod
@@ -70,38 +70,60 @@ class PDFScraper:
         return "".join(c if c.isalnum() or c in (' ', '.', '_') else '_' for c in filename)
 
     def clear_pdf_directory(self):
-        """Delete and recreate the PDF directory."""
-        shutil.rmtree(self.pdf_directory, ignore_errors=True)
-        os.makedirs(self.pdf_directory)
+        """
+        Delete and recreate the PDF directory.
+        """
+        logger.info("Clearing PDF directory.")
+        try:
+            shutil.rmtree(self.pdf_directory, ignore_errors=True)
+            os.makedirs(self.pdf_directory)
+        except Exception as e:
+            logger.exception("Error clearing PDF directory.")
+            traceback.print_exc()
 
     def clear_json_directory(self):
-        """Delete and recreate the JSON directory."""
-        shutil.rmtree(self.json_directory, ignore_errors=True)
-        os.makedirs(self.json_directory)
+        """
+        Delete and recreate the JSON directory.
+        """
+        logger.info("Clearing JSON directory.")
+        try:
+            shutil.rmtree(self.json_directory, ignore_errors=True)
+            os.makedirs(self.json_directory)
+        except Exception as e:
+            logger.exception("Error clearing JSON directory.")
+            traceback.print_exc()
 
     def clear_temp_directory(self):
-        """Delete and recreate the temporary directory."""
-        shutil.rmtree(self.temp_directory, ignore_errors=True)
-        os.makedirs(self.temp_directory)
+        """
+        Delete and recreate the temporary directory.
+        """
+        logger.info("Clearing temp directory.")
+        try:
+            shutil.rmtree(self.temp_directory, ignore_errors=True)
+            os.makedirs(self.temp_directory)
+        except Exception as e:
+            logger.exception("Error clearing temp directory.")
+            traceback.print_exc()
 
     def save_to_json(self, data, output_file):
         """
         Save the provided data to a JSON file in the json_directory.
         """
+        logger.info("Saving data to JSON: %s", output_file)
         try:
             output_path = os.path.join(self.json_directory, output_file)
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
-            print(f"Data successfully saved to {output_path}")
+            logger.info("Data successfully saved to %s", output_path)
         except Exception as e:
-            print(f"Error saving data to JSON: {e}")
+            logger.exception("Error saving data to JSON.")
+            traceback.print_exc()
 
     def analyse_and_extract_pdf(self, pdf_path, keywords):
         """
         Extract text from a PDF, then search the extracted text for the specified keywords.
-        Returns a dictionary keyed by keyword with lines of text containing that keyword.
         """
-        print(f"Analysing PDF: {pdf_path}")
+        logger.info("Analysing PDF: %s", pdf_path)
         extracted_data = {}
         try:
             text = self._extract_text_from_pdf(pdf_path)
@@ -112,25 +134,27 @@ class PDFScraper:
                 ]
                 if matching_lines:
                     extracted_data[keyword] = matching_lines
-            print(f"Extraction completed for {pdf_path}.")
+            logger.info("Extraction completed for %s.", pdf_path)
         except Exception as e:
-            print(f"Error analysing {pdf_path}: {e}")
+            logger.exception("Error analysing %s", pdf_path)
+            traceback.print_exc()
         return extracted_data
 
     def move_pdf(self, pdf_path):
         """
         Move a PDF to the designated pdf_directory with a safe filename.
-        Returns the new destination path.
         """
+        logger.info("Moving PDF: %s", pdf_path)
         try:
             file_name = os.path.basename(pdf_path)
             safe_file_name = self.make_safe_filename(file_name)
             destination_path = os.path.join(self.pdf_directory, safe_file_name)
             shutil.move(pdf_path, destination_path)
-            print(f"Moved PDF to {destination_path}.")
+            logger.info("Moved PDF to %s.", destination_path)
             return destination_path
         except Exception as e:
-            print(f"Error moving PDF {pdf_path}: {e}")
+            logger.exception("Error moving PDF %s", pdf_path)
+            traceback.print_exc()
             return None
 
     def rename_and_move_pdf(self, original_path: str, company_name: str) -> str:
@@ -138,15 +162,16 @@ class PDFScraper:
         Rename a PDF file using a unique identifier based on the company name and current time,
         then move it to the pdf_directory. Returns the new file path.
         """
+        logger.info("Renaming and moving PDF for company: %s", company_name)
         unique_id = hashlib.md5(f"{time.time()}_{company_name}".encode()).hexdigest()[:10]
         new_name = f"{company_name.replace(' ', '_')}_{unique_id}.pdf"
         new_path = os.path.join(self.pdf_directory, new_name)
-
         try:
             os.rename(original_path, new_path)
-            print(f"Moved and renamed file to: {new_path}")
+            logger.info("Moved and renamed file to: %s", new_path)
         except Exception as e:
-            print(f"Error renaming and moving file: {e}")
+            logger.exception("Error renaming and moving file.")
+            traceback.print_exc()
             raise
         return new_path
 
@@ -154,6 +179,7 @@ class PDFScraper:
         """
         Combine all JSON files in the json_directory into a single JSON file.
         """
+        logger.info("Combining JSON files into %s", output_file)
         combined_data = {}
         try:
             json_files = glob.glob(os.path.join(self.json_directory, "*.json"))
@@ -162,9 +188,10 @@ class PDFScraper:
                     data = json.load(f)
                     combined_data.update(data)
             self.save_to_json(combined_data, output_file)
-            print(f"Combined JSON data saved to {output_file}")
+            logger.info("Combined JSON data saved to %s", output_file)
         except Exception as e:
-            print(f"Error combining JSON files: {e}")
+            logger.exception("Error combining JSON files.")
+            traceback.print_exc()
 
     def _download_pdf_content(self, pdf_url, timeout=30):
         """
@@ -198,11 +225,13 @@ class PDFScraper:
         Internal helper method to read text from a PDF file using PyPDF2.
         Returns the extracted text as a string.
         """
+        logger.info("Extracting text from PDF: %s", pdf_path)
         text = ""
         try:
             with open(pdf_path, 'rb') as f:
                 reader = PdfReader(f)
                 text = "\n".join(page.extract_text() or "" for page in reader.pages)
         except Exception as e:
-            print(f"Error extracting text from {pdf_path}: {e}")
+            logger.exception("Error extracting text from %s", pdf_path)
+            traceback.print_exc()
         return text
